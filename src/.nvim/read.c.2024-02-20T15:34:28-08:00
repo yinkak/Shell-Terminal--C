@@ -1,0 +1,17 @@
+#include "shell.h"
+#include "msgs.h"
+void read_command(char *command, size_t size)
+{
+  if (fgets(command, size, stdin) == NULL){
+    if(feof(stdin)) //read input from user if no string is entered
+    {
+      yinka_print("\n");//go to a new line
+      exit(EXIT_SUCCESS);
+    }
+    else
+    {
+      perror(READ_ERROR_MSG);//error if process fails
+      exit(EXIT_FAILURE);
+    }
+  }
+}

@@ -1,0 +1,84 @@
+#include "msgs.h"
+#include "shell.h"
+//#include <limits.h> //for PATH_MAx variable
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+// internal commands
+void execute_exit() {
+  yinka_print("exiting shell...\n");
+  exit(EXIT_SUCCESS);
+}
+
+void execute_pwd() {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    yinka_print(cwd); // Print the cwd
+  }
+  /*else {
+    char *msg = FORMAT_MSG("pwd", GETCWD_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  }*/
+}
+
+void execute_help() {
+  char *pwd = FORMAT_MSG("pwd", PWD_HELP_MSG);
+  write(STDERR_FILENO, pwd, strlen(pwd));
+
+  char *exit = FORMAT_MSG("exit", EXIT_HELP_MSG);
+  write(STDERR_FILENO, exit, strlen(exit));
+
+  char *cd = FORMAT_MSG("cd", CD_HELP_MSG);
+  write(STDERR_FILENO, cd, strlen(cd));
+
+  char *help = FORMAT_MSG("help", HELP_HELP_MSG);
+  write(STDERR_FILENO, help, strlen(help));
+
+  char *ext = FORMAT_MSG("external command", EXTERN_HELP_MSG);
+  write(STDERR_FILENO, ext, strlen(ext));
+}
+
+void execute_cd(char *arg) {
+  char curdir[1024]; // 1024 is the maximum path length
+  char lastdir[1024];
+  // char path[1024];
+
+  if (getcwd(curdir, sizeof curdir)) {
+    *curdir = '\0';
+  }
+  if (arg == NULL) {
+    struct passwd *pw = getpwuid(getuid());
+    if (pw == NULL) // if already in home directory
+    {
+      char *msg = FORMAT_MSG("cd", CHDIR_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+    }
+    arg = pw->pw_dir;
+  }
+
+  if (strcmp(arg, "-") == 0) {
+    if (*lastdir == '\0') {
+      char *msg = FORMAT_MSG("cd", CHDIR_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+    }
+    arg = lastdir;
+  }
+  if (arg[0] == "~") {
+    if (arg[1] == "/" && arg[0] == "~") // relative path
+    {
+      struct passwd *pw = getpwnam(arg + 1);
+      arg = pw->pw_dir;
+    }
+
+    struct passwd *pw = getpwuid(getuid());
+    arg = pw->pw_dir; // take user to home directory
+  }
+
+  strcpy(lastdir, curdir); // copy the value of the current directory int to the
+                           // last directory
+  chdir(arg);
+}

@@ -1,0 +1,139 @@
+#include "msgs.h"
+#include "shell.h"
+//#include <limits.h> //for PATH_MAx variable
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+// internal commands
+char* command_to_string(const char* command) {
+    // Allocate memory for the command
+    char* str_command = (char*)malloc((strlen(command) + 1) * sizeof(char));
+    if (str_command == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy the command to the string
+    strcpy(str_command, command);
+
+    return str_command;
+}
+
+
+bool is_not_internal_command(const char *command) {
+  // check if function is not an internal command
+  const char *internal_commands[] = {"cd", "pwd", "exit", "history", "help"};
+  int num_internal_commands =
+      sizeof(internal_commands) / sizeof(internal_commands[0]);
+
+  for (int i = 0; i < num_internal_commands; i++) {
+    if (strcmp(command, internal_commands[i]) == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void execute_exit() {
+  yinka_print("exiting shell...\n");
+  exit(EXIT_SUCCESS);
+}
+
+void execute_pwd() {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    write(STDOUT_FILENO, cwd, strlen(cwd)); // Print the cwd
+  }
+  yinka_print("\n");
+}
+/*void execute_pwd_with_arg(const char *arg) {
+    // Check for additional arguments after "help"
+    if (strcmp(arg, "help") == 0) {
+        // Print help message for pwd
+        char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+    } else {
+        // Print error message for invalid argument
+        char *msg = FORMAT_MSG("pwd", TMA_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+    }
+}*/
+/*else {
+    char *msg = FORMAT_MSG("pwd", GETCWD_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  }*/
+
+void execute_help() {
+  char *pwd = FORMAT_MSG("pwd", PWD_HELP_MSG);
+  write(STDERR_FILENO, pwd, strlen(pwd));
+
+  char *exit = FORMAT_MSG("exit", EXIT_HELP_MSG);
+  write(STDERR_FILENO, exit, strlen(exit));
+
+  char *cd = FORMAT_MSG("cd", CD_HELP_MSG);
+  write(STDERR_FILENO, cd, strlen(cd));
+
+  char *help = FORMAT_MSG("help", HELP_HELP_MSG);
+  write(STDERR_FILENO, help, strlen(help));
+
+  char *history = FORMAT_MSG("history", HISTORY_HELP_MSG);
+  write(STDERR_FILENO, history, strlen(history));
+  char *ext = FORMAT_MSG("external command", EXTERN_HELP_MSG);
+  write(STDERR_FILENO, ext, strlen(ext));
+}
+
+void execute_cd(char *arg) {
+  char curdir[1024]; // 1024 is the maximum path length
+  char lastdir[1024];
+  // char path[1024];
+
+  if (getcwd(curdir, sizeof curdir)) {
+    *curdir = '\0';
+  }
+  if (arg == NULL) {
+    struct passwd *pw = getpwuid(getuid());
+    if (pw == NULL) // if already in home directory
+    {
+      char *msg = FORMAT_MSG("cd", CHDIR_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+    }
+    arg = pw->pw_dir;
+  }
+
+  if (strcmp(arg, "-") == 0) {
+    if (*lastdir == '\0') {
+      char *msg = FORMAT_MSG("cd", CHDIR_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+    }
+    arg = lastdir;
+  }
+  if (arg[0] == "~") {
+    if (arg[0] == "~" && arg[1] == "/") // relative path
+    {
+      struct passwd *pw = getpwnam(arg + 1);
+      arg = pw->pw_dir;
+    }
+
+    struct passwd *pw = getpwuid(getuid());
+    arg = pw->pw_dir; // take user to home directory
+  }
+  //if ((arg[3] == "h") && (arg[4] = "e") && (arg[5] == "e") && (arg[6] == "p") && (arg[7] == NULL))
+  //{
+    //char *msg = FORMAT_MSG("help", CD_HELP_MSG);
+      //write(STDERR_FILENO, msg, strlen(msg));
+  //}
+  strcpy(lastdir, curdir); // copy the value of the current directory int to the
+                           // last directory
+  if(strcmp(arg, "help") != 0){
+  chdir(arg);
+  }
+  else{
+     char *msg = FORMAT_MSG("help", CD_HELP_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+  }
+}

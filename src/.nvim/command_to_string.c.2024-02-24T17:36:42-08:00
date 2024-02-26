@@ -1,0 +1,19 @@
+
+
+
+
+char* command_to_string(const char* command)
+  {
+    // Allocate memory for the command
+    char* str_command = (char*)malloc((strlen(command) + 1) * sizeof(char));
+    if (str_command == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy the command to the string
+    strcpy(str_command, command);
+
+    return str_command;
+}
+

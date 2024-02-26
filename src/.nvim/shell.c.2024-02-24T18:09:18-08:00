@@ -1,0 +1,176 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+#include "msgs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+// signal handler
+void sigint_handler(int sig) {
+  // Display help information
+  execute_help();
+  // Re-display the command prompt
+  display_prompt();
+}
+
+// main function
+int main() {
+  // char command[120];
+  if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+    perror("signal");
+    return EXIT_FAILURE;
+  }
+  while (1) {
+    display_prompt(); // print cwd as a prompt
+
+    char *command = read_command(); // read command from user
+    // check for zombie processes
+    int wstatus = 0;
+    pid_t zombies;
+    while ((zombies = waitpid(-1, &wstatus, WNOHANG)) > 0) {
+      printf("zombie process: %d/n", zombies);
+    }
+
+    add_to_history(command);
+    // tokenize user input commands
+    if (command[0] == '\0') {
+      continue;
+    } else {
+      char *args[1024]; // take in args with a max length of 1024
+      char *token;
+      char *saveptr;
+
+      token =
+          strtok_r(command, " ",
+                   &saveptr); // initialize seperator for arguements with " "
+      int count = 0;          // initialize arguement count to 0
+      while (token != NULL) {
+        args[count] = token;
+        token = strtok_r(NULL, " ", &saveptr);
+        count++;
+        if (count >= 120) {
+          break;
+        }
+      }
+
+      args[count] = NULL; // terminate with NULL
+
+      if (args[0] == NULL) {
+        continue;
+      }
+      if (is_not_internal_command(
+              args[0])) // checks to see if the command is an internal command
+                        // and executes it either in bg or fg
+      {
+        if (strcmp(args[1], "help" == 0)) {
+          char *command_string = command_to_string(command);
+          // char *msg = FORMAT_MSG("%s", EXTERN_HELP_MSG);
+
+          //char *msg = FORMAT_MSG(command_string, EXTERN_HELP_MSG);
+          //write(STDERR_FILENO, msg, strlen(msg));
+          yinka_print(command_string);
+          yinka_print(": ");
+          yinka_print("external command or application");
+          yinka_print("\n");
+        }
+        if (strcmp(args[count - 1], "&") == 0) {
+          args[count - 1] =
+              NULL; // remove the & from the command line arguement
+          execute_bg(command,
+                     args); // execute the command as a background process
+        } else {
+          execute_fg(command, args); // execute the command as a foreground
+                                     // process
+          // yinka_print("executing_fg");
+        }
+      }
+
+      // exit
+      if (strcmp(args[0], "exit") == 0) {
+        if (count > 1) {
+          if (strcmp(args[1], "help") == 0) {
+            // help message for exit
+            char *msg = FORMAT_MSG("exit", EXIT_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_SUCCESS);
+            //  yinka_print("\n");
+          } else {
+            char *msg = FORMAT_MSG("exit", TMA_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_FAILURE);
+            //  yinka_print("\n");
+          }
+        } else {
+          execute_exit();
+        }
+      }
+
+      // pwd
+      if (strcmp(args[0], "pwd") == 0) {
+        if (count > 1) {
+          if (strcmp(args[1], "help") == 0) {
+            // help message for pwd
+            char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_SUCCESS);
+            //  yinka_print("\n");
+          } else {
+            // too many arguements
+            char *msg = FORMAT_MSG("pwd", TMA_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_FAILURE);
+            //  yinka_print("\n");
+          }
+        } else {
+          execute_pwd();
+        }
+      }
+
+      /*     else if (strcmp(args[0], "pwd") == 0) {
+          if (count > 2) {
+              // Print error message for too many arguments
+            char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+          } else if (count == 2 && strcmp(args[1], "help") == 0) {
+              // Print help message for pwd
+              char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+              write(STDERR_FILENO, msg, strlen(msg));
+          } else {
+              // Execute pwd command
+              execute_pwd();
+          }
+      }
+      */
+      // cd
+      else if (strcmp(args[0], "cd") == 0) {
+        if (count > 2) {
+          char *msg = FORMAT_MSG("cd", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+        } else {
+          execute_cd(args[1]);
+        }
+      }
+      // help
+      else if (strcmp(args[0], "help") == 0) {
+        if (count > 1) {
+          char *msg = FORMAT_MSG("help", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          // yinka_print("\n");
+        } else {
+          execute_help();
+        }
+      } else if (strcmp(args[0], "history") == 0) {
+        show_history();
+      }
+      /* else if(strcmp(args[0], "!") == 0){
+       run_history_command(command);
+       }*/
+      //      else {
+      //    execute_fg(command, args); // execute the command as a foreground
+      // process
+      // yinka_print("executing_fg");
+      //    }
+    }
+  }
+
+  return 0;
+}

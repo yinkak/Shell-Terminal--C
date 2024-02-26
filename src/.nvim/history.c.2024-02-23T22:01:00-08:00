@@ -1,0 +1,67 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+typedef struct {
+  int number;         // store the value of the number in the history list
+  char command[1024]; // command variable
+} Command;
+
+Command history[10]; // array of commands called history
+int count = 0;       // initialize the count of history functions to 0
+                     //
+void add_to_history(const char *command) {
+  Command new_command;
+  new_command.number = count;
+  strncpy(new_command.command, command,
+          sizeof(new_command) -1); // copy the command given to the new command
+                            // to be added to the history
+  new_command.command[sizeof(new_command.command) - 1] = '\0';
+  history[count % 10] = new_command;
+  count += 1;
+}
+
+void show_history() {
+  int i;
+  for (i = 9; i >= 0; i--) {
+    char number_str[20];
+    snprintf(number_str, sizeof(number_str), "%d", history[i].number);
+    yinka_print(number_str);
+    yinka_print(" ");
+    yinka_print(history[i].command);
+    yinka_print("\n");
+  }
+}
+
+void run_previous_command(const char *input) {
+    int cmd_num;
+    char *endptr;
+
+    if (input[0] == '!') {
+        if (strcmp(input, "!!") == 0) {
+            if (count == 0) {
+                char* msg = FORMAT_MSG("history", HISTORY_INVALID_MSG);
+                write(STDERR_FILENO, msg, strlen(msg));
+                return;
+            }
+            cmd_num = count - 1;
+        } else {
+            cmd_num = strtol(input + 1, &endptr, 10); // Get command number after '!'
+            if (*endptr != '\0' || cmd_num <= 0 || cmd_num > count) {
+                yinka_print("history: command invalid.\n");
+                return;
+            }
+            cmd_num--; // Convert to zero-based index
+        }
+
+        yinka_print(history[cmd_num % 10].command);
+        yinka_print("\n");
+        execute_fg(history[cmd_num % 10].command, NULL); // Execute command
+    }
+}
+

@@ -1,0 +1,8 @@
+#include "shell.h"
+
+void yinka_print(const char *message)
+{
+  write(STDOUT_FILENO, message, strlen(message));
+}
+
+write(1, &message, strlen(message))

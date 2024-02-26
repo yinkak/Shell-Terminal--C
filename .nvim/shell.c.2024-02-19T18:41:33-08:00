@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include "include/msgs.h"
+
+#define MAX_INPUT_SIZE 1024
+#define MAX_ARGS 64
+
+void cleanup_zombies() {
+    int status;
+    while (waitpid(-1, &status, WNOHANG) > 0) {
+        // Cleaning up zombies
+    }
+}
+
+int main() {
+    char input[MAX_INPUT_SIZE];
+    char *args[MAX_ARGS];
+    char *token;
+    char *saveptr;
+    int background;
+    pid_t child_pid;
+
+    while (1) {
+        // Clean up zombies before prompting for new input
+        cleanup_zombies();
+
+        // Print prompt
+        char cwd[1024];
+        if (getcwd(cwd, sizeof(cwd)) != NULL)
+            printf("%s$ ", cwd);
+        else {
+            perror("shell: unable to get current directory");
+            continue;
+        }
+
+        // Read user input
+        if (read(STDIN_FILENO, input, MAX_INPUT_SIZE) == -1) {
+            perror("shell: unable to read command");
+            continue;
+        }
+
+        // Remove trailing newline
+        input[strcspn(input, "\n")] = 0;
+
+        // Parse input
+        token = strtok_r(input, " ", &saveptr);
+        int i = 0;
+        while (token != NULL && i < MAX_ARGS - 1) {
+            args[i++] = token;
+            token = strtok_r(NULL, " ", &saveptr);
+        }
+        args[i] = NULL; // Null-terminate the array of arguments
+
+        // Check for background execution
+        if (i > 0 && strcmp(args[i - 1], "&") == 0) {
+            background = 1;
+            args[i - 1] = NULL; // Remove the '&' from the argument list
+        } else {
+            background = 0;
+        }
+
+        // Fork
+        if ((child_pid = fork()) == -1) {
+            perror("shell: unable to fork");
+            continue;
+        } else if (child_pid == 0) {
+            // Child process
+            if (execvp(args[0], args) == -1) {
+                perror("shell: unable to execute command");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            // Parent process
+            if (!background) {
+                // Foreground execution: wait for child to finish
+                waitpid(child_pid, NULL, 0);
+            }
+        }
+    }
+
+    return 0;
+}
+

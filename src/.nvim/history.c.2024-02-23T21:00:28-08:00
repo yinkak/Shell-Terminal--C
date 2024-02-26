@@ -1,0 +1,33 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+typedef struct {
+  int number;         // store the value of the number in the history list
+  char command[1024]; // command variable
+} Command;
+
+Command history[10]; // array of commands called history
+int count = 0;       // initialize the count of history functions to 0
+               //
+void add_to_history(const char *command) {
+  Command new_command;
+  new_command.number = count;
+  strncpy(new_command.command, command,
+          sizeof(command)); // copy the command given to the new command
+                            // to be added to the history
+  new_command.command[sizeof(new_command.command) - 1] = '\0';
+  count += 1;
+}
+
+void show_history()
+{
+  for (int i = 0, i < count, i++) {
+    yinka_print(history[i].number, history[i].command, "\n");
+  }
+}

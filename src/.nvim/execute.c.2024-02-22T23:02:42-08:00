@@ -1,0 +1,52 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+#include "msgs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+void execute_fg(const char *command, char *args[]) // execute foreground process
+{
+  pid_t child = fork(); // creates a child process
+
+  if (child == -1) {
+    char *msg = FORMAT_MSG("fork", FORK_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  }
+  if (child == 0) {
+    // child process
+    if (execvp(command, args) == -1) {
+      char *msg = FORMAT_MSG("shell", EXEC_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    // parent process
+    int wstatus;
+    if (waitpid(child, &wstatus, 0) == -1) {
+      char *msg = FORMAT_MSG("wait", WAIT_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+      exit(EXIT_FAILURE);
+    }
+  }
+}
+
+void execute_bg(const char *command, char *args[]) {
+  // background execution
+  pid_t child = fork();
+  if (child == -1) {
+    char *msg = FORMAT_MSG("fork", FORK_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  }
+  if (child == 0) {
+    if (execvp(command, args) == -1) {
+      char *msg = FORMAT_MSG("shell", EXEC_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    // parent process
+    yinka_print("running in background");
+  }
+}

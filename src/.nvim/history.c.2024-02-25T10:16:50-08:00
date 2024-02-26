@@ -1,0 +1,159 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define MAX_HISTORY_SIZE 10
+#define MAX_COMMAND_LENGTH 1024
+typedef struct Command {
+  int number; // store the value of the number in the history list
+  char command[MAX_COMMAND_LENGTH]; // command variable
+  // struct Command *next;
+} Command;
+/*Command history[MAX_HISTORY_SIZE]; comment start
+int count = 0; // initialize the count of history functions to 0
+
+void add_to_history(const char *command) {
+  Command new_command;
+  new_command.number = count;
+  strncpy(new_command.command, command, 1023);
+  new_command.command[sizeof(new_command.command) - 1] = '\0';
+  if (count < MAX_HISTORY_SIZE) {
+    history[count++] = new_command;
+  }
+
+else {
+    for (int i = 1; i < MAX_HISTORY_SIZE; i++) {
+    history[i - 1] = history[i];
+    }
+    history[MAX_HISTORY_SIZE - 1] = new_command;
+    new_command.number = count++;
+    }
+}*/ //endo comment
+// history[count % 10] = new_command;
+// count += 1;
+
+Command *history = NULL; // Global history array
+int count = 0;           // Number of commands in history
+int capacity = 0;        // Current capacity of history array
+
+void add_to_history(const char *command) {
+  Command new_command;
+  new_command.number = count;
+  strncpy(new_command.command, command, MAX_COMMAND_LENGTH - 1);
+  new_command.command[MAX_COMMAND_LENGTH - 1] = '\0';
+
+  // Check if reallocation is necessary
+  if (count >= capacity) {
+    // Calculate new capacity
+    int new_capacity = capacity + MAX_HISTORY_SIZE;
+
+    // Reallocate memory for history array
+    Command *new_history =
+        (Command *)realloc(history, new_capacity * sizeof(Command));
+    if (new_history == NULL) {
+      // Handle allocation failure
+      return;
+    }
+
+    // Update history pointer and capacity
+    history = new_history;
+    capacity = new_capacity;
+  }
+
+  // Add new command to history
+  history[count++] = new_command;
+}
+/*void show_history(){
+int i;
+for (i = 0; i< 10 && i < count; i++){
+  char number_str[20];
+  if(history[i].number == 0){
+    continue;
+  }
+  else{
+    int index = (count -i -1) % 10;
+    snprintf(number_str, sizeof(number_str), "%d", history[index].number);
+    yinka_print(number_str);
+    yinka_print(" ");
+    yinka_print(history[index].command);
+    yinka_print("\n");
+  }
+}
+}*/
+
+// int head = 0;
+/*void show_history() { main show history function
+  int i;
+  for (i = 9; i >= 0; i--) {
+    char number_str[20];
+    if (history[i].number == 0) {
+      continue;
+    } else {
+      snprintf(number_str, sizeof(number_str), "%d", history[i].number);
+      yinka_print(number_str);
+      yinka_print(" ");
+      yinka_print(history[i].command);
+      yinka_print("\n");
+    }
+  }
+}
+*/
+
+void show_history() {
+  // Determine the starting index based on the number of commands
+  int start_index = (count > MAX_HISTORY_SIZE) ? (count - MAX_HISTORY_SIZE) : 0;
+
+  // Display the last 10 commands in descending order
+  char number_str[20];
+  for (int i = count - 1; i >= start_index; i--) {
+    // printf("%d\t%s\n", history[i].number, history[i].command);
+    snprintf(number_str, sizeof(number_str), "%d", history[i].number);
+    yinka_print(number_str);
+    yinka_print(" ");
+    yinka_print(history[i].command);
+    yinka_print("\n");
+  }
+}
+/*void show_history() {
+  Command *current = front;
+    while (current != NULL) {
+        yinka_print(current-> number);
+        yinka_print(" ");
+        yinka_print(current-> command);
+        current = current->next;
+}
+}*/
+/*void run_history_command(const char *input) {
+  int cmd_num;
+  char *endptr;
+
+  if (input[0] == '!') {
+    if (strcmp(input, "!!") == 0) {
+      if (count == 0) {
+        char *msg = FORMAT_MSG("history", HISTORY_NO_LAST_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+        return;
+      }
+      cmd_num = count - 1;
+    } else {
+      cmd_num = strtol(input + 1, &endptr, 10); // Get command number after '!'
+      if (*endptr != '\0' || cmd_num <= 0 || cmd_num > count) {
+        char *msg = FORMAT_MSG("history", HISTORY_INVALID_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+        return;
+      }
+      cmd_num--; // Convert to zero-based index
+    }
+
+    yinka_print(history[cmd_num % 10].command);
+    yinka_print("\n");
+    execute_fg(history[cmd_num % 10].command, NULL); // Execute command
+  }
+}*/
+
+void ru

@@ -1,0 +1,10 @@
+#ifndef INTERNALCMDS_H
+#define INTERNALCMDS_H
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+
+void execute_bg(const char *command, char* args[]);
+#endif /* INTERNALCMDS_H */

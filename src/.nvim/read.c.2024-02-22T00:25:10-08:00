@@ -1,0 +1,15 @@
+#include "shell.h"
+#include "msgs.h"
+
+char *read_command()
+{
+  char *command = (char*)malloc(120 * sizeof(char));// initialize the variable command to be of
+                                                    // length 120
+  if(command == NULL){
+    yinka_print("\n");
+    char *msg = FORMAT_MSG("read", READ_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    return NULL;
+  }
+  char cmd;
+}

@@ -1,0 +1,17 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+void execute_exit() {
+  yinka_print("exiting shell...\n");
+  exit(EXIT_SUCCESS);
+}
+
+void execute_help(){
+
+}

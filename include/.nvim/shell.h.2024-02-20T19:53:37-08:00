@@ -1,0 +1,14 @@
+#ifndef SHELL_H
+#define SHELL_H
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+
+void yinka_print(const char *message);
+void display_prompt();
+void read_command(char *command, size_t size);
+void execute_fg(const char *command);
+void execute_bg(const char *command);
+#endif /* SHELL_H */

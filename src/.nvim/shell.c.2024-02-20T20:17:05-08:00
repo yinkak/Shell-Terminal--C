@@ -1,0 +1,14 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+// main function
+int main() {
+  char command[120];
+  while (1) {
+    display_prompt();
+    yinka_print(command);
+
+      command[strcspn(command, "\n")] = '\0'; //removes the new line
+    read_command(command, strlen(command));
+    //execute_fg(command);
+  }
+  return 0;
+}

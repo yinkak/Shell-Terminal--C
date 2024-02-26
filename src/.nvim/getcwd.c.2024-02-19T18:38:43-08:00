@@ -1,0 +1,16 @@
+#include "shell.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
+void display_prompt()
+{
+  char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        yinka_print(cwd); // Print the cwd
+        yinka_print("$ "); //$ at the end of the prompt
+    } else {
+        perror("getcwd() error");
+        exit(EXIT_FAILURE);
+    }
+}

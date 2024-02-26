@@ -1,0 +1,46 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+//internal commands
+void execute_exit() {
+  yinka_print("exiting shell...\n");
+  exit(EXIT_SUCCESS);
+}
+
+void execute_pwd() {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    yinka_print(cwd); // Print the cwd
+    yinka_print("\n");
+  } else {
+    char *msg = FORMAT_MSG("cwd", GETCWD_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    exit(EXIT_FAILURE);
+  } 
+}
+
+void execute_help(){
+    char *msg = FORMAT_MSG("pwd", GETCPWD_HELP_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+
+    char *msg = FORMAT_MSG("exit", EXIT_HELP_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+
+     char *msg = FORMAT_MSG("cd", CD_HELP_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+
+     char *msg = FORMAT_MSG("help", HELP_HELP_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+
+     char *msg = FORMAT_MSG("external command", EXTERN_HELP_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+
+
+
+
+}

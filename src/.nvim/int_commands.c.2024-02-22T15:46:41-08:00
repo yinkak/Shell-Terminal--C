@@ -1,0 +1,10 @@
+#include "shell.h"
+#include "msgs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+void execute_internal(const char *command, char *args[]){

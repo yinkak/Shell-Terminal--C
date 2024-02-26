@@ -1,0 +1,88 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+#include "msgs.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+// main function
+int main() {
+  // char command[120];
+
+  while (1) {
+    display_prompt(); // print cwd as a prompt
+
+    char *command = read_command(); // read command from user
+    // check for zombie processes
+    int wstatus = 0;
+    pid_t zombies;
+    while ((zombies = waitpid(-1, &wstatus, WNOHANG)) > 0) {
+      printf("zombie process: %d/n", zombies);
+    }
+    // tokenize user input commands
+    if (command[0] == '\0') {
+      continue;
+    } else {
+      char *args[120]; // take in args with a max length of 120
+      char *token;
+      char *saveptr;
+
+      token =
+          strtok_r(command, " ",
+                   &saveptr); // initialize seperator for arguements with " "
+      int count = 0;          // initialize arguement count to 0
+      while (token != NULL) {
+        args[count] = token;
+        token = strtok_r(NULL, " ", &saveptr);
+        count++;
+        if (count >= 120) {
+          break;
+        }
+      }
+
+      args[count] = NULL; // terminate with NULL
+
+      if (args[0] == NULL) {
+        continue;
+      }
+      if (strcmp(args[count - 1], "&") == 0) {
+        args[count - 1] = NULL; // remove the & from the command line arguement
+        execute_bg(command,
+                   args); // execute the command as a background process
+      }
+      if (strcmp(args[0], "exit") == 0) {
+        if (count > 1) {
+          char *msg = FORMAT_MSG("exit", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          yinka_print("\n");
+        } else {
+          execute_exit();
+        }
+      }
+      if (strcmp(args[0], "pwd") == 0) {
+        if(count > 1){
+        if (strcmp(args[1], "help") == 0) {
+          // help message for pwd
+          char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          yinka_print("\n");
+        }
+        else {
+          char *msg = FORMAT_MSG("pwd", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          yinka_print("\n");
+        } 
+        }else {
+          execute_pwd();
+        }
+      }
+      
+
+      else {
+        execute_fg(command, args); // execute the command as a foreground
+                                   // process
+      }
+    }
+  }
+
+  return 0;
+}

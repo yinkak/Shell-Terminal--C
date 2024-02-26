@@ -1,0 +1,30 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+#include "msgs.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+void execute_command(const char *command)
+{
+  pid_t pid = fork();
+
+  if (pid) {
+    int wstatus = 0;
+    if (waitpid(pid, &wstatus, 0) == -1) {
+      perror(WAIT_ERROR_MSG);
+      exit(EXIT_FAILURE);
+    }
+
+    if (WIFEXITED(wstatus)) {
+      printf("Child done.\n");
+    } else {
+      printf("%d\n", WEXITSTATUS(wstatus));
+    }
+  } else {
+    if (execl("/usr/bin/exa", "-a", "-l", NULL) == -1) {
+      perror(EXEC_ERROR_MSG);
+      exit(EXIT_FAILURE);
+    }
+  }
+
+}

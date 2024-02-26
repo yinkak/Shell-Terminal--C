@@ -1,0 +1,77 @@
+#include "msgs.h"
+#include "shell.h"
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+typedef struct Command {
+  int number;         // store the value of the number in the history list
+  char command[1024]; // command variable
+  struct Command *next;
+} Command;
+
+Command *front = NULL; // pointer to front element of queue
+Command *back = NULL;
+int count = 0; // initialize the count of history functions to 0
+               //
+void add_to_history(const char *command) {
+  Command *new_command = malloc(sizeof(command));
+  new_command ->number = ++count;
+  strncpy(new_command->command, command, sizeof(new_command->command) - 1);
+    new_command->command[sizeof(new_command->command) - 1] = '\0';
+    new_command->next = NULL; // copy the command given to the new command
+                                    // to be added to the history
+                                    if (back == NULL) {
+        front = new_command;
+        back = new_command;
+    } else {
+        back->next = new_command;
+        back = new_command;
+        if (count > 10) {
+            Command *temp = front;
+            front = front->next;
+            free(temp);
+            count--;
+}
+}
+}
+
+void show_history() {
+  Command *current = front;
+    while (current != NULL) {
+        yinka_print(current-> number);
+        yinka_print(" ");
+        yinka_print(current-> command);
+        current = current->next;
+}
+}
+/*void run_history_command(const char *input) {
+  int cmd_num;
+  char *endptr;
+
+  if (input[0] == '!') {
+    if (strcmp(input, "!!") == 0) {
+      if (count == 0) {
+        char *msg = FORMAT_MSG("history", HISTORY_NO_LAST_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+        return;
+      }
+      cmd_num = count - 1;
+    } else {
+      cmd_num = strtol(input + 1, &endptr, 10); // Get command number after '!'
+      if (*endptr != '\0' || cmd_num <= 0 || cmd_num > count) {
+        char *msg = FORMAT_MSG("history", HISTORY_INVALID_MSG);
+        write(STDERR_FILENO, msg, strlen(msg));
+        return;
+      }
+      cmd_num--; // Convert to zero-based index
+    }
+
+    yinka_print(history[cmd_num % 10].command);
+    yinka_print("\n");
+    execute_fg(history[cmd_num % 10].command, NULL); // Execute command
+  }
+}*/

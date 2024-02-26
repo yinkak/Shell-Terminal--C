@@ -1,0 +1,6 @@
+#include "shell.h"
+
+void display_prompt()
+{
+  yinka_print("input cwd here$ ");
+}

@@ -1,0 +1,199 @@
+#include "/home/cmpt201/a8-yinkak/include/shell.h"
+#include "msgs.h"
+#include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+// signal handler
+void sigint_handler(int sig) {
+  // Display help information
+  execute_help();
+  // Re-display the command prompt
+  display_prompt();
+}
+
+// main function
+int main() {
+  // char command[120];
+  if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+    execute_help();
+    return EXIT_FAILURE;
+  }
+  // char *command = read_command();
+  while (1) {
+    display_prompt();               // print cwd as a prompt
+    char *command = read_command(); // read command from user
+    // check for zombie processes
+    int wstatus = 0;
+    pid_t zombies;
+    while ((zombies = waitpid(-1, &wstatus, WNOHANG)) > 0) {
+      printf("zombie process: %d/n", zombies);
+    }
+
+    //  tokenize user input commands
+    if (command[0] == '\0') {
+      continue;
+    } else {
+      char *args[1024]; // take in args with a max length of 1024
+      char *token;
+      char *saveptr;
+
+      token =
+          strtok_r(command, " ",
+                   &saveptr); // initialize seperator for arguements with " "
+      int count = 0;          // initialize arguement count to 0
+      while (token != NULL) {
+        args[count] = token;
+        token = strtok_r(NULL, " ", &saveptr);
+        count++;
+        if (count >= 120) {
+          break;
+        }
+      }
+
+      char combined[1024];
+      // combineStrings(token, count, combined);
+      combineStrings((const char **)args, count, combined);
+      char *first_arg = args[0];
+      //if (strncmp(first_arg, "!", 1) != 0) {
+        //add_to_history(combined);
+      //}
+
+      args[count] = NULL; // terminate with NULL
+
+      if (args[0] != NULL && args[0][0] == '!') {
+        int index = atoi(args[0] + 1);         // Skip the '!' character
+        if (index == 0 && args[0][1] != '0') { // atoi failed to convert
+          char *msg = FORMAT_MSG("history", HISTORY_INVALID_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          continue;
+        }
+        if (index == 0) {
+          runLastCommand();
+        } 
+        else {
+          runNthCommand(index);
+        }
+      }
+      else{
+        add_to_history(combined);
+      }
+
+      if (args[0] == NULL) {
+        continue;
+      }
+
+      if (is_not_internal_command(
+              args[0])) // checks to see if the command is an internal command
+                        // and executes it either in bg or fg
+      {
+        ////////////////////////////////////////////
+        /*char *first_arg = args[0];
+        if (first_arg[0] == '!') {
+          char *after = extract_argument(first_arg);
+          printf("%s\n", after);
+          int index = atoi(after);
+          if (isdigit(index)) {
+            runNthCommand(index);
+          }
+        }*/
+        // if(strcmp(args[0], "!!") == 0){
+        // runLastCommand();
+        // }
+
+        if (strcmp(args[count - 1], "&") == 0) {
+          args[count - 1] =
+              NULL; // remove the & from the command line arguement
+          execute_bg(command,
+                     args); // execute the command as a background process
+        } else if (strcmp(args[count - 1], "help") == 0) {
+          char *msg = FORMAT_MSG("help", EXTERN_HELP_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+        } else {
+          execute_fg(command, args); // execute the command as a foreground
+                                     // process
+        }
+      }
+
+      // exit
+      if (strcmp(args[0], "exit") == 0) {
+        if (count > 1) {
+          if (strcmp(args[1], "help") == 0) {
+            // help message for exit
+            char *msg = FORMAT_MSG("exit", EXIT_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+          } else {
+            char *msg = FORMAT_MSG("exit", TMA_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+          }
+        } else {
+          execute_exit();
+        }
+      }
+
+      // pwd
+      if (strcmp(args[0], "pwd") == 0) {
+        if (count > 1) {
+          if (strcmp(args[1], "help") == 0) {
+            // help message for pwd
+            char *msg = FORMAT_MSG("pwd", PWD_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+          } else {
+            // too many arguements
+            char *msg = FORMAT_MSG("pwd", TMA_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+          }
+        } else {
+          execute_pwd();
+        }
+      }
+
+      // cd
+      else if (strcmp(args[0], "cd") == 0) {
+        if (count > 2) {
+          char *msg = FORMAT_MSG("cd", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+        } else {
+          execute_cd(args[1]);
+        }
+      }
+      // help
+      else if (strcmp(args[0], "help") == 0) {
+        if (count > 1) {
+          char *msg = FORMAT_MSG("help", TMA_MSG);
+          write(STDERR_FILENO, msg, strlen(msg));
+          // yinka_print("\n");
+        } else {
+          execute_help();
+        }
+      }
+      // history
+      else if (strcmp(args[0], "history") == 0) {
+        if (count > 1) {
+          if (strcmp(args[1], "help") == 0) {
+            // help message for history
+            char *msg = FORMAT_MSG("history", HISTORY_HELP_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_SUCCESS);
+            //  yinka_print("\n");
+          } else {
+            // too many arguements
+            char *msg = FORMAT_MSG("history", TMA_MSG);
+            write(STDERR_FILENO, msg, strlen(msg));
+            // exit(EXIT_FAILURE);
+            //  yinka_print("\n");
+          }
+        } else {
+          show_history();
+        }
+      }
+      // else if (strcmp(args[0], "!!") == 0) {
+      // runLastCommand();
+      //}
+    }
+  }
+
+  return 0;
+}

@@ -1,0 +1,24 @@
+#ifndef SHELL_H
+#define SHELL_H
+
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <signal.h>
+void yinka_print(const char *message);
+void yinka_read(const char *message);
+void display_prompt();
+char* read_command();
+void execute_fg(const char *command, char* args[]);
+void execute_bg(const char *command, char* args[]);
+void execute_exit();
+void execute_pwd();
+void execute_help();
+void execute_cd(char *arg);
+void sigint_handler(int sig);
+void add_to_history(const char *command);
+void show_history();
+void run_history_command(const char *input);
+#endif /* SHELL_H */

@@ -1,0 +1,35 @@
+#include "shell.h"
+#include "msgs.h"
+
+char *read_command()
+{
+  char *command = (char*)malloc(120 * sizeof(char));// initialize the variable command to be of
+                                                    // length 120
+  if(command == NULL){
+    yinka_print("\n");//move to a new line
+    char *msg = FORMAT_MSG("read", READ_ERROR_MSG);
+    write(STDERR_FILENO, msg, strlen(msg));
+    return NULL;//return if no user input is entered
+  }
+  char cmd;
+  int length = 0;
+  while((read(STDIN_FILENO, &cmd, 1) >0) (cmd != '\n') && (length < 119))// pre conditions for command
+                                                                  // traversal
+                                                                
+  {
+    command[length++] = cmd;//append character to command
+  }
+    command[length] = '\0';//Null terminate command string
+    if (length > 119)
+    {
+      yinka_print("\n");
+      char *msg = FORMAT_MSG("read", READ_ERROR_MSG);
+      write(STDERR_FILENO, msg, strlen(msg));
+      free(command);
+      return NULL;
+    }
+  
+
+
+  return command;
+}
