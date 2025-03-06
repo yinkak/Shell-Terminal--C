@@ -27,7 +27,7 @@ This project is a Simple Shell implementation written in C, designed as part of 
 - Internal Commands
   The shell supports the following built-in commands:
 
-## ✅ Internal Commands
+## Internal Commands
 
 | Command   | Description                                                            |
 | --------- | ---------------------------------------------------------------------- |
@@ -37,7 +37,7 @@ This project is a Simple Shell implementation written in C, designed as part of 
 | `help`    | Provides information about internal commands.                          |
 | `history` | Displays the last 10 commands executed.                                |
 
-## ✅ History Feature
+## History Feature
 
 | Feature          | Description                                                              |
 | ---------------- | ------------------------------------------------------------------------ |
@@ -45,7 +45,7 @@ This project is a Simple Shell implementation written in C, designed as part of 
 | `!!`             | Repeats the **last command**.                                            |
 | `!n`             | Repeats the command with **number _n_**.                                 |
 
-## ✅ Signal Handling
+## Signal Handling
 
 | Signal            | Behavior                                                 |
 | ----------------- | -------------------------------------------------------- |
